@@ -4,3 +4,5 @@ __pycache__/
 venv/
 .idea/
 glide_model_cache/
+notebooks/.ipynb_checkpoints/*
+commit .g
