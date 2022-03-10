@@ -6,16 +6,20 @@ display_size = 512
 h, w = display_size,2.0 * display_size # 64,64
 border = 10
 
-pygame.init()
-screen = pygame.display.set_mode((w + (2 * border), h + (2 * border)))
+# pygame.init()
+# screen = pygame.display.set_mode((w + (2 * border), h + (2 * border)))
 
-def image_show_pil(batch: th.Tensor, caption=''):
-    """ Display a batch of images inline. """
+def create_pil_image(batch: th.Tensor):
     scaled = ((batch + 1)*127.5).round().clamp(0,255).to(th.uint8).cpu()
     reshaped = scaled.permute(2, 0, 3, 1).reshape([batch.shape[2], -1, 3])
     npimage = reshaped.numpy()
     im = Image.fromarray(npimage)
-    im.resize(size=(512,512)).show(title=caption)
+    return im.resize(size=(512,512))
+
+
+
+def image_show_pil(batch: th.Tensor, caption=''):
+    create_pil_image(batch).show(title=caption)
 
 def image_show_pygame(batch, caption=''):
     pygame.display.set_caption(caption)
