@@ -6,8 +6,8 @@ display_size = 512
 h, w = display_size,2.0 * display_size # 64,64
 border = 10
 
-# pygame.init()
-# screen = pygame.display.set_mode((w + (2 * border), h + (2 * border)))
+pygame.init()
+screen = pygame.display.set_mode((w + (2 * border), h + (2 * border)))
 
 def create_pil_image(batch: th.Tensor):
     scaled = ((batch + 1)*127.5).round().clamp(0,255).to(th.uint8).cpu()
