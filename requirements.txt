@@ -1,0 +1,9 @@
+numpy
+torch
+pygame
+PILLOW
+requests
+filelock
+tqdm
+regex
+

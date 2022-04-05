@@ -1,4 +1,3 @@
-import sys
 import torch as th
 from visualize import image_show_pygame
 
