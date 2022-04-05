@@ -2,6 +2,7 @@ import sys
 import torch as th
 from visualize import image_show_pil, image_show_pygame
 
+image_array = []
 
 from glide_text2im.download import load_checkpoint
 from glide_text2im.model_creation import (
@@ -45,7 +46,8 @@ def generate_image(prompt:str):
         eps = th.cat([half_eps, half_eps], dim=0)
         image = th.cat([eps, rest], dim=1)
         # image_show_pygame(eps, caption=f'frame #{N}')
-        image_show_pygame(rest, caption=f'shape {rest.shape}')
+        # image_show_pygame(rest, caption=f'shape {rest.shape}')
+        image_array.append(eps)
         return image
 
     # Load / Create base model.
@@ -127,5 +129,7 @@ if __name__ == '__main__':
     samples = generate_image(prompt=prompt)
 
     # Show the output
+    for im in image_array:
+        image_show_pygame(im)
     image_show_pil(samples, caption=prompt)
     pass
