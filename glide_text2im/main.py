@@ -1,6 +1,6 @@
 import sys
 import torch as th
-from visualize import image_show_pil, image_show_pygame
+from visualize import image_show_pygame
 
 image_array = []
 
@@ -15,7 +15,7 @@ from glide_text2im.model_creation import (
 batch_size = 1
 guidance_scale = 3.0
 
-# This notebook supports both CPU and GPU.
+# This code supports both CPU and GPU.
 # On CPU, generating one sample may take on the order of 20 minutes.
 # On a GPU, it should be under a minute.
 
@@ -29,14 +29,16 @@ def update_image(batch, caption=''):
     plt.imshow(im)
     plt.show()
 '''
-
+N=0
 def generate_image(prompt:str):
     # Tune this parameter to control the sharpness of 256x256 images.
     # A value of 1.0 is sharper, but sometimes results in grainy artifacts.
     upsample_temp = 0.997
-
+    global N
+    N = 0
     # Create a classifier-free guidance sampling function
     def model_fn(x_t, ts, **kwargs):
+        global N
         half = x_t[: len(x_t) // 2]
         combined = th.cat([half, half], dim=0)
         model_out = model(combined, ts, **kwargs)
@@ -45,9 +47,9 @@ def generate_image(prompt:str):
         half_eps = uncond_eps + guidance_scale * (cond_eps - uncond_eps)
         eps = th.cat([half_eps, half_eps], dim=0)
         image = th.cat([eps, rest], dim=1)
-        # image_show_pygame(eps, caption=f'frame #{N}')
-        # image_show_pygame(rest, caption=f'shape {rest.shape}')
-        image_array.append(eps)
+        image_show_pygame(rest, caption=f'frame #{N}')
+        N += 1
+        image_array.append(rest)
         return image
 
     # Load / Create base model.
@@ -129,7 +131,6 @@ if __name__ == '__main__':
     samples = generate_image(prompt=prompt)
 
     # Show the output
-    for im in image_array:
-        image_show_pygame(im)
-    image_show_pil(samples, caption=prompt)
+    image_show_pygame(samples,prompt)
+    input("any key for exit")
     pass
