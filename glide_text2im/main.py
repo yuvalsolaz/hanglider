@@ -19,39 +19,8 @@ guidance_scale = 3.0
 # On CPU, generating one sample may take on the order of 20 minutes.
 # On a GPU, it should be under a minute.
 
-'''
-import matplotlib.pyplot as plt
-def update_image(batch, caption=''):
-    scaled = ((batch + 1)*127.5).round().clamp(0,255).to(th.uint8).cpu()
-    reshaped = scaled.reshape([batch.shape[2], -1, 3])
-    # im = Image.fromarray(reshaped.numpy())
-    im = reshaped.numpy()
-    plt.imshow(im)
-    plt.show()
-'''
-N=0
-def generate_image(prompt:str):
-    # Tune this parameter to control the sharpness of 256x256 images.
-    # A value of 1.0 is sharper, but sometimes results in grainy artifacts.
-    upsample_temp = 0.997
-    global N
-    N = 0
-    # Create a classifier-free guidance sampling function
-    def model_fn(x_t, ts, **kwargs):
-        global N
-        half = x_t[: len(x_t) // 2]
-        combined = th.cat([half, half], dim=0)
-        model_out = model(combined, ts, **kwargs)
-        eps, rest = model_out[:, :3], model_out[:, 3:]
-        cond_eps, uncond_eps = th.split(eps, len(eps) // 2, dim=0)
-        half_eps = uncond_eps + guidance_scale * (cond_eps - uncond_eps)
-        eps = th.cat([half_eps, half_eps], dim=0)
-        image = th.cat([eps, rest], dim=1)
-        image_show_pygame(rest, caption=f'frame #{N}')
-        N += 1
-        image_array.append(rest)
-        return image
-
+# Load models.
+def load_models():
     # Load / Create base model.
     options = model_and_diffusion_defaults()
     options['use_fp16'] = has_cuda
@@ -73,11 +42,45 @@ def generate_image(prompt:str):
     model_up, diffusion_up = create_model_and_diffusion(**options_up)
     model_up.eval()
     if has_cuda:
-       model_up.convert_to_fp16()
-       model_up.to(device)
-       model_up.load_state_dict(load_checkpoint('upsample', device))
+        model_up.convert_to_fp16()
+        model_up.to(device)
+        model_up.load_state_dict(load_checkpoint('upsample', device))
 
     print('total upsampler parameters', sum(x.numel() for x in model_up.parameters()))
+    return model, diffusion, options
+
+'''
+import matplotlib.pyplot as plt
+def update_image(batch, caption=''):
+    scaled = ((batch + 1)*127.5).round().clamp(0,255).to(th.uint8).cpu()
+    reshaped = scaled.reshape([batch.shape[2], -1, 3])
+    # im = Image.fromarray(reshaped.numpy())
+    im = reshaped.numpy()
+    plt.imshow(im)
+    plt.show()
+'''
+N=0
+def generate_image(prompt:str, model, diffusion, options):
+    # Tune this parameter to control the sharpness of 256x256 images.
+    # A value of 1.0 is sharper, but sometimes results in grainy artifacts.
+    upsample_temp = 0.997
+    global N
+    N = 0
+    # Create a classifier-free guidance sampling function
+    def model_fn(x_t, ts, **kwargs):
+        global N
+        half = x_t[: len(x_t) // 2]
+        combined = th.cat([half, half], dim=0)
+        model_out = model(combined, ts, **kwargs)
+        eps, rest = model_out[:, :3], model_out[:, 3:]
+        cond_eps, uncond_eps = th.split(eps, len(eps) // 2, dim=0)
+        half_eps = uncond_eps + guidance_scale * (cond_eps - uncond_eps)
+        eps = th.cat([half_eps, half_eps], dim=0)
+        image = th.cat([eps, rest], dim=1)
+        image_show_pygame(rest, caption=f'frame #{N}')
+        N += 1
+        image_array.append(rest)
+        return image
 
     ##############################
     # Sample from the base model #
@@ -126,9 +129,11 @@ if __name__ == '__main__':
         print(f'usage: python {sys.argv[0]} <prompt>')
         exit(1)
 
+    # load models:
+    model, diffusion, options = load_models()
     prompt = ' '.join(sys.argv[1:])
     print (f'generating image for: {prompt}')
-    samples = generate_image(prompt=prompt)
+    samples = generate_image(prompt=prompt, model=model, diffusion=diffusion, options=options)
 
     # Show the output
     image_show_pygame(samples,prompt)
