@@ -123,19 +123,12 @@ def generate_image(prompt:str, model, diffusion, options):
 if __name__ == '__main__':
     has_cuda = th.cuda.is_available()
     device = th.device('cpu' if not has_cuda else 'cuda')
-    print(f'using: {device} device\n')
-
-    if len(sys.argv) < 2:
-        print(f'usage: python {sys.argv[0]} <prompt>')
-        exit(1)
-
-    # load models:
     model, diffusion, options = load_models()
-    prompt = ' '.join(sys.argv[1:])
-    print (f'generating image for: {prompt}')
-    samples = generate_image(prompt=prompt, model=model, diffusion=diffusion, options=options)
+    while True:
+        prompt = input('enter caption for image generation (type E for exit) : ')
+        if prompt.lower() == 'e':
+            break
+        print (f'generating image for: {prompt}')
+        samples = generate_image(prompt=prompt, model=model, diffusion=diffusion, options=options)
+        image_show_pygame(samples,prompt)
 
-    # Show the output
-    image_show_pygame(samples,prompt)
-    input("any key for exit")
-    pass
