@@ -48,16 +48,6 @@ def load_models():
     print('total upsampler parameters', sum(x.numel() for x in model_up.parameters()))
     return model, diffusion, options
 
-'''
-import matplotlib.pyplot as plt
-def update_image(batch, caption=''):
-    scaled = ((batch + 1)*127.5).round().clamp(0,255).to(th.uint8).cpu()
-    reshaped = scaled.reshape([batch.shape[2], -1, 3])
-    # im = Image.fromarray(reshaped.numpy())
-    im = reshaped.numpy()
-    plt.imshow(im)
-    plt.show()
-'''
 N=0
 def generate_image(prompt:str, model, diffusion, options):
     # Tune this parameter to control the sharpness of 256x256 images.
